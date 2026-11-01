@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Domofon Map</title>
+  <meta name="theme-color" content="#1F6FEB" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Domofon" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <style>
+    :root { --primary:#1F6FEB; --green:#12A150; --grey:#8A94A6; --text:#101828; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    [hidden] { display: none !important; }
+    html, body { margin:0; height:100%; overflow:hidden; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color:var(--text); }
+    #map { position:absolute; inset:0; }
+
+    #status { position:absolute; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top) + 10px);
+      background:rgba(255,255,255,.95); padding:8px 14px; border-radius:20px; font-size:13px; font-weight:600;
+      box-shadow:0 2px 8px rgba(0,0,0,.18); max-width:calc(100% - 100px); text-align:center; z-index:5; pointer-events:none; }
+
+    #cross { position:absolute; left:50%; top:50%; width:0; height:0; z-index:4; pointer-events:none; }
+    #cross i { position:absolute; left:-5px; top:-5px; width:10px; height:10px; border-radius:50%; background:var(--primary); }
+    #cross b { position:absolute; left:-22px; top:-22px; width:44px; height:44px; border-radius:50%; border:3px solid var(--primary); }
+
+    #bar { position:absolute; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 16px); display:flex; gap:12px; align-items:center; z-index:5; }
+    button { font:inherit; border:0; cursor:pointer; }
+    .primary, .secondary { flex:1; padding:16px 12px; border-radius:14px; font-size:16px; font-weight:700; box-shadow:0 3px 10px rgba(0,0,0,.22); }
+    .primary { background:var(--primary); color:#fff; }
+    .secondary { background:#fff; color:var(--text); font-weight:600; }
+    .secondary.danger { color:#D92D20; }
+    .round { width:54px; height:54px; border-radius:50%; background:#fff; color:var(--primary); font-size:26px; box-shadow:0 3px 10px rgba(0,0,0,.22); flex:none; }
+
+    .modal { position:absolute; inset:0; z-index:10; background:rgba(16,24,40,.45); display:flex; align-items:flex-end; justify-content:center; }
+    .sheet, .card { background:#fff; width:100%; max-width:480px; padding:20px 20px calc(env(safe-area-inset-bottom) + 24px); border-radius:22px 22px 0 0; display:flex; flex-direction:column; gap:12px; }
+    .sheet h2 { margin:0; font-size:20px; }
+    input { width:100%; font-size:17px; padding:12px 14px; border:1px solid #D0D5DD; border-radius:12px; color:var(--text); }
+    .row { display:flex; gap:12px; margin-top:4px; }
+    #revealModal { align-items:center; padding:24px; }
+    .card { border-radius:20px; padding:22px; }
+    #revealTitle { color:#667085; font-weight:600; font-size:16px; }
+    #revealCode { font-size:38px; font-weight:800; letter-spacing:3px; text-align:center; word-break:break-all; user-select:all; }
+
+    #toast { position:absolute; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 90px); z-index:12; background:rgba(16,24,40,.92); color:#fff;
+      padding:12px 16px; border-radius:12px; font-size:14px; text-align:center; max-width:480px; margin:0 auto; }
+
+    .user-dot { width:18px; height:18px; border-radius:50%; background:#1F6FEB; border:3px solid #fff; box-shadow:0 0 0 6px rgba(31,111,235,.25); }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="cross" hidden><b></b><i></i></div>
+  <div id="status">Загрузка…</div>
+
+  <div id="bar">
+    <button id="btnMe" class="round" aria-label="Моя позиция">◎</button>
+    <button id="btnAdd" class="primary">＋ Добавить домофон</button>
+    <button id="btnCancel" class="secondary" hidden>Отмена</button>
+    <button id="btnPlace" class="primary" hidden>Поставить здесь</button>
+  </div>
+
+  <div id="addModal" class="modal" hidden>
+    <div class="sheet">
+      <h2>Код домофона</h2>
+      <input id="inTitle" placeholder="Название (необязательно), напр. «Мама»" autocomplete="off" />
+      <input id="inCode" placeholder="Пароль, напр. 1234K" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" />
+      <div class="row">
+        <button id="btnAddCancel" class="secondary">Отмена</button>
+        <button id="btnSave" class="primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="revealModal" class="modal" hidden>
+    <div class="card">
+      <div id="revealTitle">Домофон</div>
+      <div id="revealCode"></div>
+      <div class="row">
+        <button id="btnDelete" class="secondary danger">Удалить</button>
+        <button id="btnClose" class="primary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" hidden></div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
