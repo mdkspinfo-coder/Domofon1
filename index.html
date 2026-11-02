@@ -14,75 +14,230 @@
   <link rel="icon" href="icon-192.png" />
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
   <style>
-    :root { --primary:#1F6FEB; --green:#12A150; --grey:#8A94A6; --text:#101828; }
+    :root {
+      --primary: #1F6FEB; --primary-dark: #1858BF; --green: #12A150; --grey: #8A94A6;
+      --text: #101828; --muted: #667085; --line: #E4E7EC; --danger: #D92D20;
+      --shadow: 0 2px 10px rgba(16, 24, 40, .20);
+    }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     [hidden] { display: none !important; }
-    html, body { margin:0; height:100%; overflow:hidden; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; color:var(--text); }
-    #map { position:absolute; inset:0; }
+    html, body { margin: 0; height: 100%; overflow: hidden; color: var(--text);
+      font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; }
+    #map { position: absolute; inset: 0; }
+    svg { display: block; }
+    button { font: inherit; border: 0; cursor: pointer; color: inherit; background: none; padding: 0; }
 
-    #status { position:absolute; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top) + 10px);
-      background:rgba(255,255,255,.95); padding:8px 14px; border-radius:20px; font-size:13px; font-weight:600;
-      box-shadow:0 2px 8px rgba(0,0,0,.18); max-width:calc(100% - 100px); text-align:center; z-index:5; pointer-events:none; }
+    /* Круглые кнопки на карте */
+    .fab { width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #344054;
+      box-shadow: var(--shadow); display: grid; place-items: center; transition: transform .1s; }
+    .fab:active { transform: scale(.94); }
+    .fab.blue { width: 48px; height: 48px; background: var(--primary); color: #fff; }
 
-    #cross { position:absolute; left:50%; top:50%; width:0; height:0; z-index:4; pointer-events:none; }
-    #cross i { position:absolute; left:-5px; top:-5px; width:10px; height:10px; border-radius:50%; background:var(--primary); }
-    #cross b { position:absolute; left:-22px; top:-22px; width:44px; height:44px; border-radius:50%; border:3px solid var(--primary); }
+    #accountBtn { position: absolute; z-index: 6; left: calc(env(safe-area-inset-left) + 12px);
+      top: calc(env(safe-area-inset-top) + 10px); overflow: hidden; }
+    #accountBtn img, #accountBtn .initial { width: 100%; height: 100%; object-fit: cover; }
+    #accountBtn .initial { display: grid; place-items: center; background: var(--primary); color: #fff;
+      font-weight: 700; font-size: 18px; }
 
-    #bar { position:absolute; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 16px); display:flex; gap:12px; align-items:center; z-index:5; }
-    button { font:inherit; border:0; cursor:pointer; }
-    .primary, .secondary { flex:1; padding:16px 12px; border-radius:14px; font-size:16px; font-weight:700; box-shadow:0 3px 10px rgba(0,0,0,.22); }
-    .primary { background:var(--primary); color:#fff; }
-    .secondary { background:#fff; color:var(--text); font-weight:600; }
-    .secondary.danger { color:#D92D20; }
-    .round { width:54px; height:54px; border-radius:50%; background:#fff; color:var(--primary); font-size:26px; box-shadow:0 3px 10px rgba(0,0,0,.22); flex:none; }
+    #status { position: absolute; z-index: 5; left: 50%; transform: translateX(-50%);
+      top: calc(env(safe-area-inset-top) + 14px); max-width: calc(100% - 132px);
+      background: rgba(255,255,255,.96); padding: 7px 14px; border-radius: 18px; font-size: 13px;
+      font-weight: 600; text-align: center; box-shadow: var(--shadow); pointer-events: none; }
 
-    .modal { position:absolute; inset:0; z-index:10; background:rgba(16,24,40,.45); display:flex; align-items:flex-end; justify-content:center; }
-    .sheet, .card { background:#fff; width:100%; max-width:480px; padding:20px 20px calc(env(safe-area-inset-bottom) + 24px); border-radius:22px 22px 0 0; display:flex; flex-direction:column; gap:12px; }
-    .sheet h2 { margin:0; font-size:20px; }
-    input { width:100%; font-size:17px; padding:12px 14px; border:1px solid #D0D5DD; border-radius:12px; color:var(--text); }
-    .row { display:flex; gap:12px; margin-top:4px; }
-    #revealModal { align-items:center; padding:24px; }
-    .card { border-radius:20px; padding:22px; }
-    #revealTitle { color:#667085; font-weight:600; font-size:16px; }
-    #revealCode { font-size:38px; font-weight:800; letter-spacing:3px; text-align:center; word-break:break-all; user-select:all; }
+    #fabs { position: absolute; z-index: 5; right: calc(env(safe-area-inset-right) + 12px);
+      bottom: calc(env(safe-area-inset-bottom) + 24px); display: flex; flex-direction: column;
+      align-items: center; gap: 12px; }
 
-    #toast { position:absolute; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom) + 90px); z-index:12; background:rgba(16,24,40,.92); color:#fff;
-      padding:12px 16px; border-radius:12px; font-size:14px; text-align:center; max-width:480px; margin:0 auto; }
+    #cross { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 4; pointer-events: none; }
+    #cross i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+    #cross b { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--primary); }
 
-    .user-dot { width:18px; height:18px; border-radius:50%; background:#1F6FEB; border:3px solid #fff; box-shadow:0 0 0 6px rgba(31,111,235,.25); }
+    #bar { position: absolute; z-index: 5; left: 16px; right: 16px; display: flex; gap: 12px;
+      bottom: calc(env(safe-area-inset-bottom) + 20px); max-width: 480px; margin: 0 auto; }
+    .btn { flex: 1; padding: 15px 12px; border-radius: 14px; font-size: 16px; font-weight: 700; text-align: center; }
+    .btn.primary { background: var(--primary); color: #fff; box-shadow: var(--shadow); }
+    .btn.primary:active { background: var(--primary-dark); }
+    .btn.secondary { background: #fff; color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
+    .btn.danger { color: var(--danger); }
+    .btn:disabled { opacity: .6; }
+
+    /* Окна */
+    .modal { position: absolute; inset: 0; z-index: 10; background: rgba(16, 24, 40, .45);
+      display: flex; align-items: flex-end; justify-content: center; }
+    .sheet { background: #fff; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 12px;
+      padding: 14px 20px calc(env(safe-area-inset-bottom) + 22px); border-radius: 22px 22px 0 0; }
+    .sheet::before { content: ""; width: 38px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 4px; }
+    .sheet h2 { margin: 0; font-size: 20px; }
+    .muted { color: var(--muted); font-size: 14px; line-height: 1.4; margin: 0; }
+    input:not([type]) { width: 100%; font-size: 17px; padding: 12px 14px; border: 1px solid #D0D5DD; border-radius: 12px; color: var(--text); }
+    input:not([type]):focus { outline: 2px solid rgba(31,111,235,.35); border-color: var(--primary); }
+    a { color: var(--primary-dark); }
+    .legal { font-size: 13px; text-align: center; line-height: 1.6; }
+    .link-danger { color: var(--danger); font-size: 14px; text-decoration: underline; align-self: center; padding: 6px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); flex: none; }
+    .icon-btn:active { background: #F2F4F7; }
+    .reveal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .check { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
+    .check input, .reasons input { width: 22px; height: 22px; flex: none; margin: 1px 0 0; accent-color: var(--primary); }
+    .reasons { display: flex; flex-direction: column; gap: 4px; }
+    .reasons label { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
+    .role-badge { display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 10px; background: #E8F0FE; color: var(--primary-dark); font-size: 12px; font-weight: 700; }
+    .row { display: flex; gap: 12px; margin-top: 2px; }
+    .sheet .btn.secondary, .card .btn.secondary { box-shadow: none; border: 1px solid var(--line); }
+
+    #revealModal { align-items: center; padding: 24px; }
+    .card { background: #fff; width: 100%; max-width: 420px; padding: 22px; border-radius: 20px; display: flex; flex-direction: column; gap: 14px; }
+    #revealTitle { color: var(--muted); font-weight: 600; font-size: 16px; }
+    #revealCode { font-size: 38px; font-weight: 800; letter-spacing: 3px; text-align: center; word-break: break-all; user-select: all; }
+
+    /* Аккаунт */
+    .acc-head { display: flex; align-items: center; gap: 14px; }
+    .acc-avatar { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: var(--primary); color: #fff;
+      display: grid; place-items: center; font-weight: 700; font-size: 22px; flex: none; }
+    .acc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .acc-name { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+    .acc-mail { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+    .plan { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 12px; background: #F2F4F7; font-size: 14px; }
+    .plan b { font-weight: 700; }
+    .plan span { color: var(--muted); }
+    .auth-btn { display: block; width: 100%; padding: 14px; border-radius: 14px; font-size: 16px; font-weight: 600; text-align: center; border: 1px solid #D0D5DD; background: #fff; }
+    .auth-btn.apple { background: #000; border-color: #000; color: #fff; }
+    .auth-btn:disabled { opacity: .45; }
+    .notice { background: #FFF6E5; color: #7A4B00; padding: 12px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
+    #accMsg { font-weight: 600; color: var(--primary-dark); }
+
+    #toast { position: absolute; z-index: 30; left: 50%; transform: translateX(-50%); width: max-content;
+      top: calc(env(safe-area-inset-top) + 64px); max-width: calc(100% - 32px); background: rgba(16,24,40,.92); color: #fff;
+      padding: 11px 16px; border-radius: 12px; font-size: 14px; line-height: 1.35; text-align: center; }
+
+    .user-dot { width: 18px; height: 18px; border-radius: 50%; background: #1F6FEB; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(31,111,235,.25); }
+    .maplibregl-ctrl-top-right { top: calc(env(safe-area-inset-top) + 6px); }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="cross" hidden><b></b><i></i></div>
-  <div id="status">Загрузка…</div>
 
-  <div id="bar">
-    <button id="btnMe" class="round" aria-label="Моя позиция">◎</button>
-    <button id="btnAdd" class="primary">＋ Добавить домофон</button>
-    <button id="btnCancel" class="secondary" hidden>Отмена</button>
-    <button id="btnPlace" class="primary" hidden>Поставить здесь</button>
+  <button id="accountBtn" class="fab" aria-label="Аккаунт">
+    <svg id="accIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+  </button>
+
+  <div id="status">Загрузка…</div>
+  <div id="cross" hidden><b></b><i></i></div>
+
+  <div id="fabs">
+    <button id="btnMe" class="fab" aria-label="Моя позиция">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+    </button>
+    <button id="btnAdd" class="fab blue" aria-label="Добавить домофон">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
   </div>
 
+  <div id="bar" hidden>
+    <button id="btnCancel" class="btn secondary">Отмена</button>
+    <button id="btnPlace" class="btn primary">Поставить здесь</button>
+  </div>
+
+  <!-- Ввод пароля -->
   <div id="addModal" class="modal" hidden>
     <div class="sheet">
       <h2>Код домофона</h2>
-      <input id="inTitle" placeholder="Название (необязательно), напр. «Мама»" autocomplete="off" />
-      <input id="inCode" placeholder="Пароль, напр. 1234K" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" />
+      <input id="inTitle" placeholder="Название (необязательно), напр. «Мама»" autocomplete="off" maxlength="60" />
+      <input id="inCode" placeholder="Пароль, напр. 1234K" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="40" />
+      <p class="muted" id="addHint">Метку увидят все пользователи, а код откроется только тем, кто подойдёт ближе 800 м.</p>
       <div class="row">
-        <button id="btnAddCancel" class="secondary">Отмена</button>
-        <button id="btnSave" class="primary">Сохранить</button>
+        <button id="btnAddCancel" class="btn secondary">Отмена</button>
+        <button id="btnSave" class="btn primary">Сохранить</button>
       </div>
     </div>
   </div>
 
+  <!-- Показ пароля -->
   <div id="revealModal" class="modal" hidden>
     <div class="card">
-      <div id="revealTitle">Домофон</div>
+      <div class="reveal-head">
+        <div id="revealTitle">Домофон</div>
+        <button id="btnReport" class="icon-btn" aria-label="Пожаловаться на метку" title="Пожаловаться">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg>
+        </button>
+      </div>
       <div id="revealCode"></div>
       <div class="row">
-        <button id="btnDelete" class="secondary danger">Удалить</button>
-        <button id="btnClose" class="primary">Закрыть</button>
+        <button id="btnDelete" class="btn secondary danger">Удалить</button>
+        <button id="btnClose" class="btn primary">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Аккаунт -->
+  <div id="accModal" class="modal" hidden>
+    <div class="sheet">
+      <p id="accMsg" class="muted" hidden></p>
+
+      <div id="accOut" hidden>
+        <h2>Вход в аккаунт</h2>
+        <p class="muted" style="margin:6px 0 14px">Войдите, чтобы добавлять домофоны и видеть коды рядом с вами. Метки других пользователей видны и без входа.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="btnGoogle" class="auth-btn">Войти через Google</button>
+          <button id="btnApple" class="auth-btn apple">Войти через Apple</button>
+          <p id="appleSoon" class="muted" hidden>Вход через Apple появится позже.</p>
+          <p class="muted">После входа нужно будет принять правила и дать согласие на обработку данных.</p>
+        </div>
+      </div>
+
+      <div id="accIn" hidden>
+        <div class="acc-head">
+          <div id="accAvatar" class="acc-avatar"></div>
+          <div><div id="accName" class="acc-name"></div><div id="accMail" class="acc-mail"></div><div id="accRole" class="role-badge" hidden></div></div>
+        </div>
+        <div class="plan" style="margin:14px 0"><b>Тариф</b><span>Бесплатный · подписка скоро</span></div>
+        <button id="btnMod" class="btn primary" style="width:100%;flex:none;margin-bottom:10px" hidden>Панель модерации</button>
+        <button id="btnSignOut" class="btn secondary danger" style="width:100%;flex:none">Выйти</button>
+        <div style="display:flex;justify-content:center;margin-top:6px"><button id="btnDeleteAccount" class="link-danger">Удалить аккаунт и данные</button></div>
+      </div>
+
+      <div id="accOff" class="notice" hidden></div>
+      <p class="muted legal">
+        <a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a> ·
+        <a href="terms.html" target="_blank" rel="noopener">Правила использования</a> ·
+        <a href="consent.html" target="_blank" rel="noopener">Согласие на обработку данных</a>
+      </p>
+      <button id="btnAccClose" class="btn secondary" style="flex:none">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Согласие с документами (показывается после входа, пока не принято) -->
+  <div id="consentModal" class="modal" hidden style="z-index:20">
+    <div class="sheet">
+      <h2>Прежде чем начать</h2>
+      <p class="muted">Чтобы добавлять домофоны и видеть коды, нужно принять документы. Метки и их названия видны всем пользователям, а ваши личные данные (почта, имя) видят только оператор и модераторы.</p>
+      <label class="check"><input type="checkbox" id="chkTerms" />
+        <span>Мне исполнилось 16 лет. Я принимаю <a href="terms.html" target="_blank" rel="noopener">Правила использования</a> и <a href="privacy.html" target="_blank" rel="noopener">Политику конфиденциальности</a>.</span></label>
+      <label class="check"><input type="checkbox" id="chkData" />
+        <span>Я даю <a href="consent.html" target="_blank" rel="noopener">согласие на обработку персональных данных</a>.</span></label>
+      <div class="row">
+        <button id="btnConsentDecline" class="btn secondary">Отказаться и выйти</button>
+        <button id="btnConsentAccept" class="btn primary" disabled>Принимаю</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Жалоба на метку -->
+  <div id="reportModal" class="modal" hidden style="z-index:15">
+    <div class="sheet">
+      <h2>Пожаловаться на метку</h2>
+      <p class="muted">Жалобу увидят только владелец сервиса и модераторы.</p>
+      <div id="reasons" class="reasons">
+        <label><input type="radio" name="reason" value="wrong_code" /> Код не подходит или устарел</label>
+        <label><input type="radio" name="reason" value="fake" /> Выдуманная метка или спам</label>
+        <label><input type="radio" name="reason" value="private" /> Частная территория, код нельзя публиковать</label>
+        <label><input type="radio" name="reason" value="abuse" /> Оскорбительное название</label>
+        <label><input type="radio" name="reason" value="other" /> Другое</label>
+      </div>
+      <input id="reportComment" placeholder="Комментарий (необязательно)" maxlength="300" autocomplete="off" />
+      <div class="row">
+        <button id="btnReportCancel" class="btn secondary">Отмена</button>
+        <button id="btnReportSend" class="btn primary" disabled>Отправить</button>
       </div>
     </div>
   </div>
@@ -90,6 +245,7 @@
   <div id="toast" hidden></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Модерация · Domofon Map</title>
+  <link rel="icon" href="icon-192.png" />
+  <style>
+    :root { --primary:#1F6FEB; --primary-dark:#1858BF; --text:#101828; --muted:#667085; --line:#E4E7EC; --bg:#F6F7F9; --danger:#D92D20; --green:#12A150; }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; line-height: 1.45; }
+    header { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+    .wrap { max-width: 780px; margin: 0 auto; padding: 0 16px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 8px; flex-wrap: wrap; }
+    h1 { font-size: 20px; margin: 0; }
+    .who { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 10px; background: #E8F0FE; color: var(--primary-dark); font-size: 12px; font-weight: 700; }
+    .badge.red { background: #FEE4E2; color: var(--danger); }
+    .badge.grey { background: #F2F4F7; color: var(--muted); }
+    nav { display: flex; gap: 4px; overflow-x: auto; }
+    nav button { padding: 10px 14px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+    nav button[aria-selected="true"] { color: var(--primary-dark); border-bottom-color: var(--primary); }
+    main { padding: 16px 0 60px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: 1px; background: #F2F4F7; padding: 6px 10px; border-radius: 8px; overflow-wrap: anywhere; }
+    .quote { border-left: 3px solid var(--line); padding-left: 10px; color: #344054; overflow-wrap: anywhere; }
+    .kv { font-size: 14px; overflow-wrap: anywhere; }
+    .kv b { font-weight: 600; color: var(--muted); }
+    button.btn { padding: 10px 14px; border-radius: 10px; border: 1px solid #D0D5DD; background: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    button.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    button.btn.danger { color: var(--danger); border-color: #FDA29B; }
+    button.btn:disabled { opacity: .5; cursor: default; }
+    input { font: inherit; padding: 10px 12px; border: 1px solid #D0D5DD; border-radius: 10px; width: 100%; }
+    .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+    #gate { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin: 24px 0; display: flex; flex-direction: column; gap: 12px; }
+    #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: rgba(16,24,40,.92); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px); z-index: 20; }
+    a { color: var(--primary-dark); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="top">
+        <h1>Модерация</h1>
+        <div class="who"><span id="whoMail"></span><span id="whoRole" class="badge" hidden></span><a href="./">К карте</a></div>
+      </div>
+      <nav id="tabs" role="tablist" hidden>
+        <button role="tab" data-tab="open">Жалобы <span id="cntOpen"></span></button>
+        <button role="tab" data-tab="handled">Обработанные</button>
+        <button role="tab" data-tab="banned">Блокировки</button>
+        <button role="tab" data-tab="team" id="tabTeam" hidden>Команда</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div id="gate" hidden>
+      <div id="gateMsg"></div>
+      <div class="row">
+        <button id="gateLogin" class="btn primary" hidden>Войти через Google</button>
+        <button id="gateLogout" class="btn" hidden>Выйти и сменить аккаунт</button>
+      </div>
+    </div>
+    <main id="content" hidden></main>
+  </div>
+  <div id="toast" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script type="module" src="moderation.js"></script>
+</body>
+</html>
