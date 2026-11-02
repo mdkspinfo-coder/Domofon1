@@ -5,8 +5,8 @@
 // Защищают данные правила доступа из supabase/schema.sql, а не секретность ключа.
 // Никогда не вставляй сюда ключ service_role.
 export const CONFIG = {
-  SUPABASE_URL: 'https://YOUR-PROJECT.supabase.co',
-  SUPABASE_ANON_KEY: 'PASTE-YOUR-ANON-KEY',
+  SUPABASE_URL: 'vfvnttjawbmwhkdhvbfh',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdm50dGphd2Jtd2hrZGh2YmZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MTU3MzYsImV4cCI6MjEwOTE5MTczNn0.X6Au52WaeIVy9AOHrOvixx20aGEbQZzNJDwJsaYm_Fo',
   // Какие способы входа включены. Apple заработает, только когда настроен Sign in with Apple
   // (нужна платная программа Apple Developer). Тогда поставь apple: true.
   PROVIDERS: { google: true, apple: false },
